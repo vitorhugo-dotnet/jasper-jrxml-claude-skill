@@ -24,6 +24,9 @@ portable_paths=(
   README.md
   PRIVACY.md
   CHANGELOG.md
+  agents/openai.yaml
+  assets/legacy-jrxml-toolkit-composer.svg
+  assets/legacy-jrxml-toolkit-logo.svg
   scripts/compile-jrxml.ps1
   references/legacy-jrxml-layout.md
   references/project-integration.md

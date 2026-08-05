@@ -75,7 +75,10 @@ def main() -> None:
 
     files = {
         "packaging/codex/plugin.json": ".codex-plugin/plugin.json",
+        "assets/legacy-jrxml-toolkit-composer.svg": "assets/legacy-jrxml-toolkit-composer.svg",
+        "assets/legacy-jrxml-toolkit-logo.svg": "assets/legacy-jrxml-toolkit-logo.svg",
         "SKILL.md": f"skills/{SKILL_NAME}/SKILL.md",
+        "agents/openai.yaml": f"skills/{SKILL_NAME}/agents/openai.yaml",
         "scripts/compile-jrxml.ps1": f"skills/{SKILL_NAME}/scripts/compile-jrxml.ps1",
         "references/legacy-jrxml-layout.md": f"skills/{SKILL_NAME}/references/legacy-jrxml-layout.md",
         "references/project-integration.md": f"skills/{SKILL_NAME}/references/project-integration.md",
@@ -88,6 +91,17 @@ def main() -> None:
     }
     for source, destination in files.items():
         copy_file(repo_root, plugin_root, source, destination)
+
+    for asset_name in (
+        "legacy-jrxml-toolkit-composer.svg",
+        "legacy-jrxml-toolkit-logo.svg",
+    ):
+        copy_file(
+            repo_root,
+            plugin_root,
+            f"assets/{asset_name}",
+            f"skills/{SKILL_NAME}/assets/{asset_name}",
+        )
 
     generated_notice = (
         "# Generated Codex plugin\n\n"

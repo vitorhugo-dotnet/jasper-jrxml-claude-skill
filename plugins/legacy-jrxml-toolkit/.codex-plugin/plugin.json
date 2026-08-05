@@ -1,6 +1,6 @@
 {
   "name": "legacy-jrxml-toolkit",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Build, compile, and validate complex legacy iReport and JasperReports 2.x JRXML reports.",
   "author": {
     "name": "Vitor Hugo Alves Ferreira",
@@ -35,6 +35,8 @@
       "Compile this legacy JRXML with the project's JDK 8 dependencies.",
       "Diagnose this JRValidationException without modernizing the schema."
     ],
-    "brandColor": "#F97316"
+    "brandColor": "#F97316",
+    "composerIcon": "./assets/legacy-jrxml-toolkit-composer.svg",
+    "logo": "./assets/legacy-jrxml-toolkit-logo.svg"
   }
 }
