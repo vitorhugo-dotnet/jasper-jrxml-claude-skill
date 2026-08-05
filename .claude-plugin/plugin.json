@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "legacy-jrxml-toolkit",
   "displayName": "Legacy JRXML Toolkit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Create, inspect, compile, and validate complex legacy iReport and JasperReports 2.x JRXML reports without introducing incompatible modern syntax.",
   "author": {
     "name": "Vitor Hugo Alves Ferreira"
