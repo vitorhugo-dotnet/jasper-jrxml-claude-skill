@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "jasper-jrxml-legacy",
+  "displayName": "Jasper JRXML Legacy",
+  "version": "1.0.0",
+  "description": "Create, inspect, compile, and validate complex legacy iReport and JasperReports 2.x JRXML reports without introducing incompatible modern syntax.",
+  "author": {
+    "name": "Vitor Hugo Alves Ferreira"
+  },
+  "homepage": "https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill",
+  "repository": "https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill",
+  "license": "MIT",
+  "keywords": [
+    "jasperreports",
+    "ireport",
+    "jrxml",
+    "legacy-java",
+    "reporting",
+    "pdf-forms"
+  ],
+  "skills": [
+    "./"
+  ]
+}
