@@ -44,8 +44,9 @@ jobs:
         run: node --test tests/validate-claude-version.test.mjs
 
       - name: Validate Claude plugin version increment
+        if: github.event_name == 'pull_request'
         env:
-          CLAUDE_VERSION_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          CLAUDE_VERSION_BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: node scripts/validate-claude-version.mjs
 
       - name: Validate Claude plugin metadata
