@@ -6,12 +6,16 @@ on:
       - main
     paths:
       - .github/workflows/apply-openai-interface-fix.yml
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   apply:
+    if: github.head_ref == 'fix/openai-interface-assets' || github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
