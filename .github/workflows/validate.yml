@@ -9,6 +9,23 @@ permissions:
 
 jobs:
   validate:
+    name: Validate compiler script
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Validate compiler script metadata
+        run: bash tests/validate-skill.sh compiler
+
+      - name: Run PowerShell compiler contract tests
+        shell: pwsh
+        run: ./tests/compile-jrxml.Tests.ps1
+
+  validate-claude:
+    name: Validate Claude Code plugin
+    needs: validate
     runs-on: ubuntu-latest
 
     steps:
@@ -31,12 +48,79 @@ jobs:
           CLAUDE_VERSION_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
         run: node scripts/validate-claude-version.mjs
 
-      - name: Validate skill and Claude plugin metadata
-        run: bash tests/validate-skill.sh
+      - name: Validate Claude plugin metadata
+        run: bash tests/validate-skill.sh claude
 
-      - name: Validate Codex/OpenAI skill package
+  validate-codex:
+    name: Validate ChatGPT and Codex bundle
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Validate Codex plugin metadata
+        run: bash tests/validate-skill.sh codex
+
+      - name: Validate workflow structure
+        run: bash tests/workflow-structure.Tests.sh
+
+      - name: Validate ChatGPT and Codex distribution package
         run: bash tests/package-skill.Tests.sh
 
-      - name: Run PowerShell compiler contract tests
-        shell: pwsh
-        run: ./tests/compile-jrxml.Tests.ps1
+  release-codex:
+    name: Publish ChatGPT and Codex release
+    needs: validate-codex
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Build ChatGPT and Codex bundle
+        run: bash scripts/package-skill.sh dist
+
+      - name: Resolve release metadata
+        id: release
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          version="$(python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          skill = Path('SKILL.md').read_text(encoding='utf-8')
+          match = re.search(r'^\s*version:\s*["\']?([^"\'\n]+)', skill, re.MULTILINE)
+          if not match:
+              raise SystemExit('SKILL.md version metadata is missing')
+          print(match.group(1).strip())
+          PY
+          )"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=chatgpt-codex-v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          assets=(
+            dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip
+            dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip.sha256
+          )
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" \
+              --target "$GITHUB_SHA" \
+              --title "Legacy JRXML Toolkit for ChatGPT/Codex v$RELEASE_VERSION" \
+              --notes "Validated ChatGPT/Codex skill bundle generated from the canonical SKILL.md."
+          fi
