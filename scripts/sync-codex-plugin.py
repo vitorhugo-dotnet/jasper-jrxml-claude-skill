@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shutil
 from pathlib import Path
 
@@ -35,14 +34,6 @@ def copy_file(repo_root: Path, plugin_root: Path, source: str, destination: str)
     shutil.copy2(source_path, destination_path)
 
 
-def read_skill_version(skill_path: Path) -> str:
-    contents = skill_path.read_text(encoding="utf-8")
-    match = re.search(r'^\s*version:\s*["\']?([^"\'\n]+)', contents, re.MULTILINE)
-    if match is None:
-        raise SystemExit("Codex plugin generation failed: SKILL.md version is missing")
-    return match.group(1).strip()
-
-
 def main() -> None:
     args = parse_args()
     repo_root = Path(__file__).resolve().parent.parent
@@ -54,16 +45,13 @@ def main() -> None:
 
     manifest_source = repo_root / "packaging" / "codex" / "plugin.json"
     manifest = json.loads(manifest_source.read_text(encoding="utf-8"))
-    skill_version = read_skill_version(repo_root / "SKILL.md")
 
     if manifest.get("name") != PLUGIN_NAME:
         raise SystemExit(
             f"Codex plugin generation failed: manifest name must be {PLUGIN_NAME}"
         )
-    if manifest.get("version") != skill_version:
-        raise SystemExit(
-            "Codex plugin generation failed: plugin and SKILL.md versions differ"
-        )
+    if not manifest.get("version"):
+        raise SystemExit("Codex plugin generation failed: plugin version is missing")
     if manifest.get("skills") != "./skills/":
         raise SystemExit(
             "Codex plugin generation failed: manifest skills path must be ./skills/"
@@ -106,8 +94,9 @@ def main() -> None:
     generated_notice = (
         "# Generated Codex plugin\n\n"
         "This directory is generated from the canonical files at the repository root.\n"
-        "Run `python3 scripts/sync-codex-plugin.py` after changing the skill, metadata, "
-        "references, scripts, or public documentation. Do not edit generated copies directly.\n"
+        "Run `python3 scripts/sync-codex-plugin.py` after changing the skill, interface "
+        "metadata, references, scripts, or public documentation. Do not edit generated "
+        "copies directly.\n"
     )
     (plugin_root / "GENERATED.md").write_text(generated_notice, encoding="utf-8")
 
