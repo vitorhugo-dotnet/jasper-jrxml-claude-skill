@@ -2,32 +2,65 @@
 
 ## Goal
 
-Publish the existing portable Agent Skill for Codex/OpenAI-compatible installation without introducing a second editable copy of `SKILL.md` or an undocumented Codex manifest.
+Publish the existing portable Agent Skill as an installable Codex skill-only plugin and independent Git marketplace while preserving root `SKILL.md` as the single editable source.
 
-## Decision
+## Official format
 
-The repository root remains the canonical skill source. A deterministic packaging script creates `dist/jasper-jrxml-skill.zip` from an explicit allowlist containing `SKILL.md`, `references/`, `scripts/`, `docs/`, `LICENSE`, `README.md`, `PRIVACY.md`, and `CHANGELOG.md`.
+Current Codex supports plugins with a required `.codex-plugin/plugin.json`, skills under `skills/`, and marketplace catalogs under `.agents/plugins/marketplace.json`. The repository therefore exposes:
 
-No `.codex-plugin` manifest will be added until OpenAI publishes and documents a stable schema. Codex users may install from the repository through the Agent Skills directory, while ChatGPT/OpenAI skill upload uses the generated ZIP artifact.
+```text
+.agents/plugins/marketplace.json
+plugins/legacy-jrxml-toolkit/
+├── .codex-plugin/plugin.json
+└── skills/jasper-jrxml/
+    ├── SKILL.md
+    ├── references/
+    ├── scripts/
+    └── docs/
+```
 
-## Components
+## Canonical-source decision
 
-- `scripts/package-skill.sh`: builds the ZIP from a clean staging directory and produces a SHA-256 checksum.
-- `tests/package-skill.Tests.sh`: validates archive contents, exclusions, relative paths, and reproducibility-oriented behavior.
-- `.github/workflows/validate.yml`: runs the package contract test on every push and pull request.
-- `.github/workflows/release.yml`: builds and attaches the ZIP and checksum to semantic-version tags.
-- `README.md`: documents direct Codex installation, ZIP creation, and OpenAI upload steps.
-- `CHANGELOG.md`: records the new distribution support.
+The repository root remains canonical. `packaging/codex/plugin.json` stores Codex-specific metadata, while `scripts/sync-codex-plugin.py` generates `plugins/legacy-jrxml-toolkit/` from root `SKILL.md`, public references, scripts, documentation, license, changelog, and privacy statement.
+
+Generated copies are committed so a Git-hosted marketplace can install the plugin directly, but validation rejects any drift from canonical root files. Contributors edit the root files and regeneration source, never the generated plugin tree.
+
+## Distribution artifacts
+
+`scripts/package-skill.sh` produces two deterministic archives and SHA-256 checksums:
+
+- `jasper-jrxml-skill.zip`: portable Agent Skill layout;
+- `legacy-jrxml-toolkit-codex-plugin.zip`: official Codex plugin layout.
+
+Tagged releases publish both archive formats.
+
+## Installation
+
+Codex users add the repository as a Git marketplace and install the plugin by marketplace identity:
+
+```bash
+codex plugin marketplace add vitorhugo-dotnet/jasper-jrxml-claude-skill
+codex plugin add legacy-jrxml-toolkit@jasper-jrxml-plugins
+```
+
+A direct skill checkout under `$CODEX_HOME/skills` remains available for clients or environments that do not use the plugin marketplace.
 
 ## Validation
 
-The package test must fail when the packaging script is absent, then pass only when the archive contains the required portable files and excludes repository metadata, CI files, generated artifacts, and proprietary references.
+CI verifies:
 
-Release automation must run the existing repository validation before publishing assets.
+- root Agent Skill and Claude plugin metadata;
+- Codex manifest shape, version consistency, and interface metadata;
+- Codex marketplace path, policy, and plugin identity;
+- generated-tree equality with canonical files;
+- portable and Codex archive contents, checksums, safe paths, and relative links;
+- absence of generated `.jasper` files and proprietary references;
+- release tag and manifest version consistency.
 
 ## Constraints
 
-- `SKILL.md` remains the single source of truth.
-- Relative paths referenced by `SKILL.md` must remain valid inside the ZIP.
-- The package must not include `.git/`, `.github/`, `tests/`, `dist/`, generated `.jasper` files, or private project content.
-- The implementation must not claim a global Codex marketplace submission path that is not publicly documented.
+- Root `SKILL.md` remains the single editable skill source.
+- Relative paths referenced by `SKILL.md` remain valid in both archive layouts.
+- Generated Codex files must be reproducible through `scripts/sync-codex-plugin.py`.
+- Packages exclude `.git/`, `.github/`, `tests/`, `dist/`, generated `.jasper` files, and private project content.
+- The repository may be installed as an independent marketplace, but it does not claim automatic inclusion in an OpenAI-operated curated directory.
