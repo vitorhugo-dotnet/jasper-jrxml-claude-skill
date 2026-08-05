@@ -83,6 +83,8 @@ for required in (
     'chatgpt-codex-v',
     'legacy-jrxml-toolkit-chatgpt-codex-skill.zip',
     'legacy-jrxml-toolkit-chatgpt-codex-skill.zip.sha256',
+    'git tag --force "$RELEASE_TAG" "$GITHUB_SHA"',
+    'git push origin "refs/tags/$RELEASE_TAG" --force',
     'gh release',
 ):
     if required not in release_codex:
