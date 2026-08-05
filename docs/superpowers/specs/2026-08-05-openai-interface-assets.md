@@ -11,3 +11,7 @@ The OpenAI plugin upload validator accepted the manifest-bearing ZIP but rejecte
 - Place OpenAI skill UI metadata in `agents/openai.yaml` and include the icon assets inside the skill directory.
 - Keep the canonical files at the repository root and generate the packaged plugin tree through `scripts/sync-codex-plugin.py`.
 - Validate source files and the final release ZIP against the portal requirements.
+
+## Verification
+
+The final ZIP must resolve both manifest images and both `agents/openai.yaml` image references to square SVG files contained in the archive.
