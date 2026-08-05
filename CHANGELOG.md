@@ -14,6 +14,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Public privacy statement.
 - Automated validation for the skill and Claude plugin metadata.
 
+### Changed
+
+- Renamed the public Claude Code plugin to `Legacy JRXML Toolkit` with the identifier `legacy-jrxml-toolkit`.
+
 ## [1.0.0] - 2026-08-05
 
 ### Added
