@@ -7,8 +7,8 @@
   },
   "plugins": [
     {
-      "name": "jasper-jrxml-legacy",
-      "displayName": "Jasper JRXML Legacy",
+      "name": "legacy-jrxml-toolkit",
+      "displayName": "Legacy JRXML Toolkit",
       "source": "./",
       "strict": true,
       "version": "1.0.0",
