@@ -1,0 +1,20 @@
+{
+  "name": "jasper-jrxml-plugins",
+  "interface": {
+    "displayName": "Jasper JRXML Plugins"
+  },
+  "plugins": [
+    {
+      "name": "legacy-jrxml-toolkit",
+      "source": {
+        "source": "local",
+        "path": "./plugins/legacy-jrxml-toolkit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
