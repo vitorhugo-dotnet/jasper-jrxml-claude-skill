@@ -14,7 +14,47 @@ It preserves legacy syntax instead of “helpfully” upgrading a 2007 report in
 
 ## Install
 
-The repository is both a portable Agent Skill and a Claude Code plugin marketplace. `SKILL.md` remains the canonical source at the repository root.
+The repository is a portable Agent Skill, a Claude Code marketplace, and a Codex plugin marketplace. Root `SKILL.md` remains the canonical source. The Codex plugin tree is generated from it and must not be edited manually.
+
+### Codex plugin marketplace
+
+Add the GitHub repository as a Codex marketplace:
+
+```bash
+codex plugin marketplace add vitorhugo-dotnet/jasper-jrxml-claude-skill
+```
+
+Install the skill-only plugin:
+
+```bash
+codex plugin add legacy-jrxml-toolkit@jasper-jrxml-plugins
+```
+
+Start a new Codex thread after installation so the skill is loaded.
+
+The installable plugin uses the official layout:
+
+```text
+.agents/plugins/marketplace.json
+plugins/legacy-jrxml-toolkit/
+├── .codex-plugin/plugin.json
+└── skills/jasper-jrxml/
+    ├── SKILL.md
+    ├── references/
+    ├── scripts/
+    └── docs/
+```
+
+### Codex direct skill installation
+
+For a skill-only checkout without plugin metadata, clone the repository into Codex's skill directory:
+
+```bash
+git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git \
+  "${CODEX_HOME:-$HOME/.codex}/skills/jasper-jrxml"
+```
+
+Restart Codex after installing the skill.
 
 ### Claude Code marketplace
 
@@ -65,11 +105,34 @@ git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git \
 
 Clients that support the [Agent Skills specification](https://agentskills.io/specification) can discover it there or through their configured skill catalog.
 
-### Codex
+Do not keep multiple editable copies. Prefer the root skill plus generated packages or symlinks supported by the client and operating system.
 
-Use the cross-agent `~/.agents/skills/jasper-jrxml` location when supported by your Codex environment, or register/clone the folder in the Codex skills directory configured by that environment.
+## Build distribution artifacts
 
-Do not keep multiple editable copies. Prefer one clone plus symlinks when the operating system and client support them.
+Generate the portable Agent Skill ZIP and the official Codex plugin ZIP:
+
+```bash
+bash scripts/package-skill.sh
+```
+
+Artifacts:
+
+```text
+dist/jasper-jrxml-skill.zip
+dist/jasper-jrxml-skill.zip.sha256
+dist/legacy-jrxml-toolkit-codex-plugin.zip
+dist/legacy-jrxml-toolkit-codex-plugin.zip.sha256
+```
+
+The repository marketplace is the preferred Codex installation path. The ZIPs support release distribution, offline inspection, and environments that expose manual skill/plugin upload.
+
+After changing canonical skill files or public metadata, regenerate the committed Codex plugin tree:
+
+```bash
+python3 scripts/sync-codex-plugin.py
+```
+
+Repository validation fails when the generated tree is stale.
 
 ## Usage
 
@@ -104,10 +167,11 @@ When a correction is confirmed, the agent writes a focused Markdown lesson in th
 
 ## Validate this repository
 
-Validate the portable skill and Claude plugin metadata:
+Run all portable skill, Claude plugin, Codex plugin, and package checks:
 
 ```bash
 bash tests/validate-skill.sh
+bash tests/package-skill.Tests.sh
 ```
 
 Validate with Claude Code itself:
@@ -128,6 +192,10 @@ If PowerShell is installed:
 ```powershell
 pwsh -NoProfile -File tests/compile-jrxml.Tests.ps1
 ```
+
+## Publishing boundary
+
+This repository can be installed directly as an independent Codex marketplace. Inclusion in any OpenAI-operated curated directory remains subject to OpenAI's current review and submission process; the repository does not claim an undocumented automatic global-listing path.
 
 ## Privacy and releases
 
