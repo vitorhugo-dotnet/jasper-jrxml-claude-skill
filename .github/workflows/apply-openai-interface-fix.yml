@@ -1,0 +1,185 @@
+name: Apply OpenAI interface fix
+
+on:
+  push:
+    branches:
+      - fix/openai-interface-assets
+    paths:
+      - .github/workflows/apply-openai-interface-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v6
+        with:
+          ref: fix/openai-interface-assets
+          fetch-depth: 0
+
+      - name: Apply interface metadata, packaging, and version updates
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 - <<'PY'
+          from __future__ import annotations
+
+          import json
+          import re
+          from pathlib import Path
+
+          VERSION = "1.0.4"
+
+
+          def read(path: str) -> str:
+              return Path(path).read_text(encoding="utf-8")
+
+
+          def write(path: str, content: str) -> None:
+              Path(path).write_text(content, encoding="utf-8")
+
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              content = read(path)
+              if old not in content:
+                  raise SystemExit(f"expected text not found in {path}: {old!r}")
+              write(path, content.replace(old, new, 1))
+
+
+          skill_path = Path("SKILL.md")
+          skill = skill_path.read_text(encoding="utf-8")
+          skill, count = re.subn(
+              r'(^metadata:\n  version: ")[^"]+("$)',
+              rf'\g<1>{VERSION}\g<2>',
+              skill,
+              count=1,
+              flags=re.MULTILINE,
+          )
+          if count != 1:
+              raise SystemExit("could not update SKILL.md metadata.version")
+          skill_path.write_text(skill, encoding="utf-8")
+
+          claude_manifest_path = Path(".claude-plugin/plugin.json")
+          claude_manifest = json.loads(claude_manifest_path.read_text(encoding="utf-8"))
+          claude_manifest["version"] = VERSION
+          claude_manifest_path.write_text(
+              json.dumps(claude_manifest, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+
+          claude_marketplace_path = Path(".claude-plugin/marketplace.json")
+          claude_marketplace = json.loads(
+              claude_marketplace_path.read_text(encoding="utf-8")
+          )
+          for plugin in claude_marketplace.get("plugins", []):
+              if plugin.get("name") == "legacy-jrxml-toolkit":
+                  plugin["version"] = VERSION
+          claude_marketplace_path.write_text(
+              json.dumps(claude_marketplace, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+
+          codex_manifest_path = Path("packaging/codex/plugin.json")
+          codex_manifest = json.loads(codex_manifest_path.read_text(encoding="utf-8"))
+          codex_manifest["version"] = VERSION
+          interface = codex_manifest.setdefault("interface", {})
+          interface["composerIcon"] = "./assets/legacy-jrxml-toolkit-composer.svg"
+          interface["logo"] = "./assets/legacy-jrxml-toolkit-logo.svg"
+          codex_manifest_path.write_text(
+              json.dumps(codex_manifest, indent=2, ensure_ascii=False) + "\n",
+              encoding="utf-8",
+          )
+
+          sync_path = "scripts/sync-codex-plugin.py"
+          replace_once(
+              sync_path,
+              '        "packaging/codex/plugin.json": ".codex-plugin/plugin.json",\n'
+              '        "SKILL.md": f"skills/{SKILL_NAME}/SKILL.md",',
+              '        "packaging/codex/plugin.json": ".codex-plugin/plugin.json",\n'
+              '        "assets/legacy-jrxml-toolkit-composer.svg": "assets/legacy-jrxml-toolkit-composer.svg",\n'
+              '        "assets/legacy-jrxml-toolkit-logo.svg": "assets/legacy-jrxml-toolkit-logo.svg",\n'
+              '        "SKILL.md": f"skills/{SKILL_NAME}/SKILL.md",\n'
+              '        "agents/openai.yaml": f"skills/{SKILL_NAME}/agents/openai.yaml",',
+          )
+          replace_once(
+              sync_path,
+              '    for source, destination in files.items():\n'
+              '        copy_file(repo_root, plugin_root, source, destination)\n\n'
+              '    generated_notice = (',
+              '    for source, destination in files.items():\n'
+              '        copy_file(repo_root, plugin_root, source, destination)\n\n'
+              '    for asset_name in (\n'
+              '        "legacy-jrxml-toolkit-composer.svg",\n'
+              '        "legacy-jrxml-toolkit-logo.svg",\n'
+              '    ):\n'
+              '        copy_file(\n'
+              '            repo_root,\n'
+              '            plugin_root,\n'
+              '            f"assets/{asset_name}",\n'
+              '            f"skills/{SKILL_NAME}/assets/{asset_name}",\n'
+              '        )\n\n'
+              '    generated_notice = (',
+          )
+
+          package_path = "scripts/package-skill.sh"
+          replace_once(
+              package_path,
+              '  CHANGELOG.md\n'
+              '  scripts/compile-jrxml.ps1',
+              '  CHANGELOG.md\n'
+              '  agents/openai.yaml\n'
+              '  assets/legacy-jrxml-toolkit-composer.svg\n'
+              '  assets/legacy-jrxml-toolkit-logo.svg\n'
+              '  scripts/compile-jrxml.ps1',
+          )
+
+          validate_path = ".github/workflows/validate.yml"
+          replace_once(
+              validate_path,
+              '      - name: Validate ChatGPT and Codex distribution package\n'
+              '        run: bash tests/package-skill.Tests.sh\n',
+              '      - name: Validate ChatGPT and Codex distribution package\n'
+              '        run: bash tests/package-skill.Tests.sh\n\n'
+              '      - name: Validate OpenAI plugin and skill interface\n'
+              '        run: python3 tests/openai-interface.Tests.py\n',
+          )
+
+          readme_path = "README.md"
+          replace_once(
+              readme_path,
+              'Use `legacy-jrxml-toolkit-chatgpt-codex-plugin.zip` in the OpenAI plugin submission portal. It contains `.codex-plugin/plugin.json` at the ZIP root and the skill under `skills/jasper-jrxml/`, which is the structure the portal validates.\n',
+              'Use `legacy-jrxml-toolkit-chatgpt-codex-plugin.zip` in the OpenAI plugin submission portal. It contains `.codex-plugin/plugin.json` at the ZIP root and the skill under `skills/jasper-jrxml/`, which is the structure the portal validates. The manifest references the square landing-page icon through `interface.composerIcon` and `interface.logo`, while skill-specific interface settings live in `skills/jasper-jrxml/agents/openai.yaml`.\n',
+          )
+
+          changelog_path = Path("CHANGELOG.md")
+          changelog = changelog_path.read_text(encoding="utf-8")
+          heading = "# Changelog\n"
+          entry = (
+              "\n## 1.0.4 - 2026-08-05\n\n"
+              "- Added the square landing-page SVG as the OpenAI composer icon and plugin logo.\n"
+              "- Added `agents/openai.yaml` for skill display metadata, icons, brand color, and default prompt.\n"
+              "- Added source and release-ZIP tests for OpenAI plugin directory compliance.\n"
+          )
+          if heading not in changelog:
+              raise SystemExit("CHANGELOG.md heading not found")
+          changelog_path.write_text(
+              changelog.replace(heading, heading + entry, 1), encoding="utf-8"
+          )
+          PY
+
+          python3 scripts/sync-codex-plugin.py
+          rm .github/workflows/apply-openai-interface-fix.yml
+
+      - name: Commit generated compatibility update
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: add OpenAI plugin interface assets"
+          git push origin HEAD:fix/openai-interface-assets
