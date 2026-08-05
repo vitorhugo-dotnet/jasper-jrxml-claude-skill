@@ -7,7 +7,7 @@ trap 'rm -rf "$output_dir"' EXIT
 
 "$repo_dir/scripts/package-skill.sh" "$output_dir"
 
-skill_archive="$output_dir/jasper-jrxml-skill.zip"
+skill_archive="$output_dir/legacy-jrxml-toolkit-chatgpt-codex-skill.zip"
 plugin_archive="$output_dir/legacy-jrxml-toolkit-codex-plugin.zip"
 
 for archive in "$skill_archive" "$plugin_archive"; do
@@ -118,6 +118,15 @@ with zipfile.ZipFile(skill_archive_path) as portable:
     validate_links(portable_skill, portable_names)
     validate_privacy(portable, portable_names)
 
+version_match = re.search(
+    r'^\s*version:\s*["\']?([^"\'\n]+)',
+    portable_skill,
+    re.MULTILINE,
+)
+if not version_match:
+    raise SystemExit('package test failed: SKILL.md version metadata is missing')
+skill_version = version_match.group(1).strip()
+
 with zipfile.ZipFile(plugin_archive_path) as plugin:
     plugin_names = set(plugin.namelist())
     missing = sorted(plugin_required - plugin_names)
@@ -135,7 +144,7 @@ with zipfile.ZipFile(plugin_archive_path) as plugin:
         raise SystemExit('package test failed: invalid Codex plugin name')
     if manifest.get('skills') != './skills/':
         raise SystemExit('package test failed: Codex plugin skills path must be ./skills/')
-    if manifest.get('version') != '1.0.0':
+    if manifest.get('version') != skill_version:
         raise SystemExit('package test failed: Codex plugin version must match SKILL.md')
 
     interface = manifest.get('interface')
@@ -161,5 +170,5 @@ with zipfile.ZipFile(plugin_archive_path) as plugin:
         if parsed is None or parsed.scheme != 'https' or not parsed.netloc:
             raise SystemExit(f'package test failed: {field} must be an absolute HTTPS URL')
 
-print('portable skill and Codex plugin package validation passed')
+print('ChatGPT/Codex skill and Codex plugin package validation passed')
 PY
