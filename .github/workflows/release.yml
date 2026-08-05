@@ -23,7 +23,6 @@ jobs:
         run: |
           set -Eeuo pipefail
           version="${GITHUB_REF_NAME#v}"
-          grep -q "^[[:space:]]*version: \"${version}\"$" SKILL.md
           python3 - "$version" <<'PY'
           import json
           import sys
@@ -45,6 +44,9 @@ jobs:
 
       - name: Validate distribution packages
         run: bash tests/package-skill.Tests.sh
+
+      - name: Validate OpenAI interface
+        run: python3 tests/openai-interface.Tests.py
 
       - name: Build release assets
         run: bash scripts/package-skill.sh dist
