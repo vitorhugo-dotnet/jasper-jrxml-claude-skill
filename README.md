@@ -27,20 +27,20 @@ Add this GitHub repository as a marketplace:
 Install the plugin:
 
 ```text
-/plugin install jasper-jrxml-legacy@jasper-jrxml-plugins
+/plugin install legacy-jrxml-toolkit@jasper-jrxml-plugins
 ```
 
 The plugin exposes the skill under the Claude Code namespace:
 
 ```text
-/jasper-jrxml-legacy:jasper-jrxml
+/legacy-jrxml-toolkit:jasper-jrxml
 ```
 
 Equivalent non-interactive CLI commands:
 
 ```bash
 claude plugin marketplace add vitorhugo-dotnet/jasper-jrxml-claude-skill
-claude plugin install jasper-jrxml-legacy@jasper-jrxml-plugins
+claude plugin install legacy-jrxml-toolkit@jasper-jrxml-plugins
 ```
 
 ### Claude Code direct checkout
@@ -52,7 +52,7 @@ git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git
 claude --plugin-dir ./jasper-jrxml-claude-skill
 ```
 
-Inside that session, invoke `/jasper-jrxml-legacy:jasper-jrxml`. For project-scoped distribution, prefer marketplace installation instead of maintaining another copy.
+Inside that session, invoke `/legacy-jrxml-toolkit:jasper-jrxml`. For project-scoped distribution, prefer marketplace installation instead of maintaining another copy.
 
 ### Cross-agent path
 
@@ -120,7 +120,7 @@ claude --plugin-dir .
 Inside that Claude Code session, invoke:
 
 ```text
-/jasper-jrxml-legacy:jasper-jrxml
+/legacy-jrxml-toolkit:jasper-jrxml
 ```
 
 If PowerShell is installed:
