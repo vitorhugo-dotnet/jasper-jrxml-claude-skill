@@ -93,5 +93,5 @@ PY
   printf 'created %s\n' "$archive_path.sha256"
 }
 
-create_archive "$portable_stage" "legacy-jrxml-toolkit-chatgpt-codex-skill.zip"
-create_archive "$plugin_stage" "legacy-jrxml-toolkit-codex-plugin.zip"
+create_archive "$portable_stage" "legacy-jrxml-toolkit-agent-skill.zip"
+create_archive "$plugin_stage" "legacy-jrxml-toolkit-chatgpt-codex-plugin.zip"
