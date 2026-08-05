@@ -1,5 +1,6 @@
 *.jasper
 target/jaspercompile_*/
+dist/
 .worktrees/
 .idea/
 .vscode/
