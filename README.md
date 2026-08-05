@@ -43,16 +43,16 @@ claude plugin marketplace add vitorhugo-dotnet/jasper-jrxml-claude-skill
 claude plugin install jasper-jrxml-legacy@jasper-jrxml-plugins
 ```
 
-### Claude Code standalone skill
+### Claude Code direct checkout
 
-For a direct installation without the marketplace:
+For local development without registering the marketplace, clone the repository and load it as a plugin:
 
 ```bash
-git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git \
-  ~/.claude/skills/jasper-jrxml
+git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git
+claude --plugin-dir ./jasper-jrxml-claude-skill
 ```
 
-For project-scoped use, clone or add it as a submodule under `.claude/skills/jasper-jrxml`.
+Inside that session, invoke `/jasper-jrxml-legacy:jasper-jrxml`. For project-scoped distribution, prefer marketplace installation instead of maintaining another copy.
 
 ### Cross-agent path
 
