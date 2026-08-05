@@ -4,7 +4,7 @@ Use primary sources when obtaining form layouts and upstream JasperReports examp
 
 ## SINAN and dense official forms
 
-- [SINAN portal — Ministério da Saúde](https://portalsinan.saude.gov.br/)
+- [SINAN portal — Brazilian Ministry of Health](https://portalsinan.saude.gov.br/)
 - [SINAN agravos and documents](https://portalsinan.saude.gov.br/agravos-de-a-z)
 - [Official Individual Notification Form (PDF)](https://portalsinan.saude.gov.br/images/documentos/Agravos/NINDIV/Notificacao_Individual_v5.pdf)
 - [SINAN rules and routines manual (PDF)](https://portalsinan.saude.gov.br/images/documentos/Aplicativos/sinan_net/Manual_Normas_e_Rotinas_2_edicao.pdf)
