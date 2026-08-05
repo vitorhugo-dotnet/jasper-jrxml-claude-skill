@@ -42,6 +42,10 @@ validate_common() {
 
   grep -q '^name: jasper-jrxml$' SKILL.md || fail 'invalid skill name'
   grep -q '^description: .*iReport.*JasperReports' SKILL.md || fail 'description does not target legacy iReport/JasperReports'
+  grep -q '^license: MIT$' SKILL.md || fail 'skill license frontmatter is missing'
+  if grep -q '^metadata:[[:space:]]*$' SKILL.md; then
+    fail 'SKILL.md must not contain metadata; use agents/openai.yaml for interface settings'
+  fi
   grep -q 'JasperReports 2\.0\.4' SKILL.md || fail 'legacy 2.0.4 scope is missing'
   grep -q 'docs/report/' SKILL.md || fail 'project learning path is missing'
   grep -q 'portalsinan\.saude\.gov\.br' references/official-report-sources.md || fail 'official SINAN source is missing'
@@ -82,6 +86,7 @@ validate_claude() {
   require_files \
     .claude-plugin/plugin.json \
     .claude-plugin/marketplace.json \
+    packaging/codex/plugin.json \
     scripts/validate-claude-version.mjs \
     tests/validate-claude-version.test.mjs
 
@@ -90,22 +95,19 @@ validate_claude() {
 
   python3 - <<'PY'
 import json
-import re
 from pathlib import Path
 
-skill = Path('SKILL.md').read_text(encoding='utf-8')
-version_match = re.search(r'^\s*version:\s*["\']?([^"\'\n]+)', skill, re.MULTILINE)
-if not version_match:
-    raise SystemExit('validation failed: SKILL.md version metadata is missing')
-skill_version = version_match.group(1).strip()
-
+canonical = json.loads(Path('packaging/codex/plugin.json').read_text(encoding='utf-8'))
 plugin = json.loads(Path('.claude-plugin/plugin.json').read_text(encoding='utf-8'))
 marketplace = json.loads(Path('.claude-plugin/marketplace.json').read_text(encoding='utf-8'))
+canonical_version = canonical.get('version')
+if not canonical_version:
+    raise SystemExit('validation failed: canonical plugin version is missing')
 
 expected = {
     'name': 'legacy-jrxml-toolkit',
     'displayName': 'Legacy JRXML Toolkit',
-    'version': skill_version,
+    'version': canonical_version,
     'license': 'MIT',
     'skills': ['./'],
 }
@@ -130,8 +132,8 @@ if entry.get('name') != plugin['name'] or entry.get('displayName') != plugin['di
     raise SystemExit('validation failed: Claude marketplace identity differs from plugin manifest')
 if entry.get('source') != './' or entry.get('strict') is not True:
     raise SystemExit('validation failed: Claude marketplace source or strict mode is invalid')
-if entry.get('version') != plugin['version']:
-    raise SystemExit('validation failed: Claude marketplace and plugin versions differ')
+if entry.get('version') != canonical_version:
+    raise SystemExit('validation failed: Claude marketplace and canonical plugin versions differ')
 PY
 
   printf 'Claude plugin validation passed\n'
@@ -145,9 +147,11 @@ validate_codex() {
     tests/package-skill.Tests.sh \
     tests/workflow-structure.Tests.sh \
     packaging/codex/plugin.json \
+    .claude-plugin/plugin.json \
     .agents/plugins/marketplace.json \
     plugins/legacy-jrxml-toolkit/.codex-plugin/plugin.json \
     plugins/legacy-jrxml-toolkit/skills/jasper-jrxml/SKILL.md \
+    plugins/legacy-jrxml-toolkit/skills/jasper-jrxml/agents/openai.yaml \
     plugins/legacy-jrxml-toolkit/skills/jasper-jrxml/scripts/compile-jrxml.ps1 \
     plugins/legacy-jrxml-toolkit/skills/jasper-jrxml/references/legacy-jrxml-layout.md \
     plugins/legacy-jrxml-toolkit/skills/jasper-jrxml/references/project-integration.md \
@@ -176,21 +180,22 @@ import json
 import re
 from pathlib import Path
 
-skill = Path('SKILL.md').read_text(encoding='utf-8')
-version_match = re.search(r'^\s*version:\s*["\']?([^"\'\n]+)', skill, re.MULTILINE)
-if not version_match:
-    raise SystemExit('validation failed: SKILL.md version metadata is missing')
-skill_version = version_match.group(1).strip()
-
 source = json.loads(Path('packaging/codex/plugin.json').read_text(encoding='utf-8'))
 generated = json.loads(Path('plugins/legacy-jrxml-toolkit/.codex-plugin/plugin.json').read_text(encoding='utf-8'))
+claude = json.loads(Path('.claude-plugin/plugin.json').read_text(encoding='utf-8'))
 marketplace = json.loads(Path('.agents/plugins/marketplace.json').read_text(encoding='utf-8'))
 
 if source != generated:
     raise SystemExit('validation failed: generated Codex manifest differs from its source')
+plugin_version = source.get('version')
+if not isinstance(plugin_version, str) or not re.fullmatch(r'\d+\.\d+\.\d+', plugin_version):
+    raise SystemExit('validation failed: canonical plugin version must use MAJOR.MINOR.PATCH')
+if claude.get('version') != plugin_version:
+    raise SystemExit('validation failed: Claude and Codex plugin versions differ')
+
 expected = {
     'name': 'legacy-jrxml-toolkit',
-    'version': skill_version,
+    'version': plugin_version,
     'description': 'Build, compile, and validate complex legacy iReport and JasperReports 2.x JRXML reports.',
     'license': 'MIT',
     'skills': './skills/',
@@ -203,6 +208,7 @@ interface = source.get('interface')
 required = {
     'displayName', 'shortDescription', 'longDescription', 'developerName',
     'category', 'capabilities', 'websiteURL', 'privacyPolicyURL', 'defaultPrompt',
+    'composerIcon', 'logo',
 }
 if not isinstance(interface, dict) or not required <= interface.keys():
     raise SystemExit('validation failed: Codex plugin interface metadata is incomplete')
@@ -222,8 +228,12 @@ if entry.get('source') != {'source': 'local', 'path': './plugins/legacy-jrxml-to
 if entry.get('policy') != {'installation': 'AVAILABLE', 'authentication': 'ON_INSTALL'}:
     raise SystemExit('validation failed: Codex marketplace policy is invalid')
 
-if Path('SKILL.md').read_bytes() != Path('plugins/legacy-jrxml-toolkit/skills/jasper-jrxml/SKILL.md').read_bytes():
+canonical_skill = Path('SKILL.md').read_text(encoding='utf-8')
+generated_skill = Path('plugins/legacy-jrxml-toolkit/skills/jasper-jrxml/SKILL.md').read_text(encoding='utf-8')
+if canonical_skill != generated_skill:
     raise SystemExit('validation failed: generated Codex skill differs from canonical SKILL.md')
+if re.search(r'^metadata:\s*$', canonical_skill, re.MULTILINE):
+    raise SystemExit('validation failed: SKILL.md metadata must move to agents/openai.yaml')
 PY
 
   printf 'Codex plugin validation passed\n'
