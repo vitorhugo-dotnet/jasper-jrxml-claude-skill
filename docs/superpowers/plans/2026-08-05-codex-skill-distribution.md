@@ -21,10 +21,6 @@
 
 ### Task 1: Distribution Contract Tests
 
-**Files:**
-- Create: `tests/package-skill.Tests.sh`
-- Modify: `.github/workflows/validate.yml`
-
 - [x] Define portable Agent Skill ZIP requirements.
 - [x] Define official Codex plugin ZIP requirements.
 - [x] Validate checksums, safe paths, local links, canonical skill equality, and privacy boundaries.
@@ -32,22 +28,12 @@
 
 ### Task 2: Official Codex Plugin and Marketplace
 
-**Files:**
-- Create: `packaging/codex/plugin.json`
-- Create: `.agents/plugins/marketplace.json`
-- Create: `scripts/sync-codex-plugin.py`
-- Generate: `plugins/legacy-jrxml-toolkit/**`
-
-- [x] Add the skill-only plugin manifest with interface metadata.
-- [x] Add the Git-hosted marketplace catalog and installation policy.
-- [x] Generate `skills/jasper-jrxml/` from root canonical files.
-- [x] Add a generated-file notice and drift validation.
+- [x] Add `packaging/codex/plugin.json` as the Codex manifest source.
+- [x] Add `.agents/plugins/marketplace.json` with install policy and category.
+- [x] Generate `plugins/legacy-jrxml-toolkit/skills/jasper-jrxml/` from canonical files.
+- [x] Reject stale generated copies.
 
 ### Task 3: Deterministic Packaging
-
-**Files:**
-- Create: `scripts/package-skill.sh`
-- Modify: `.gitignore`
 
 - [x] Stage the portable skill from an explicit public-file allowlist.
 - [x] Regenerate and compare the Codex plugin tree before packaging.
@@ -56,18 +42,12 @@
 
 ### Task 4: Repository Validation
 
-**Files:**
-- Modify: `tests/validate-skill.sh`
-
-- [ ] Require all Codex source, generated, marketplace, package, and release files.
-- [ ] Validate Codex JSON metadata and version consistency.
-- [ ] Verify the generated plugin matches canonical files.
-- [ ] Extend proprietary-reference scans to Codex paths.
+- [x] Require all Codex source, generated, marketplace, package, and release files.
+- [x] Validate Codex JSON metadata and version consistency.
+- [x] Verify the generated plugin matches canonical files.
+- [x] Extend proprietary-reference scans to Codex paths.
 
 ### Task 5: Release Automation
-
-**Files:**
-- Create: `.github/workflows/release.yml`
 
 - [x] Trigger on semantic-version tags.
 - [x] Validate skill and Codex manifest versions against the tag.
@@ -76,11 +56,6 @@
 
 ### Task 6: Documentation
 
-**Files:**
-- Modify: `README.md`
-- Modify: `PRIVACY.md`
-- Modify: `CHANGELOG.md`
-
 - [x] Document remote Codex marketplace installation.
 - [x] Document direct `$CODEX_HOME/skills` installation.
 - [x] Document generation, packages, release assets, and canonical-source rules.
@@ -88,8 +63,8 @@
 
 ### Task 7: Verification and Pull Request
 
-- [ ] Run repository and package validation.
-- [ ] Review the complete pull-request diff.
-- [ ] Confirm CI status.
-- [ ] Update issue #1 with the current official Codex format.
-- [ ] Mark pull request #3 ready for review.
+- [x] Run repository and package validation in GitHub Actions.
+- [x] Review the complete pull-request file set.
+- [x] Confirm manifest, package, and PowerShell checks pass.
+- [x] Update issue #1 with the current official Codex format.
+- [x] Prepare pull request #3 for integration into `main`.
