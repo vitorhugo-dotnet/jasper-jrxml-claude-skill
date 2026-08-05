@@ -39,7 +39,7 @@ grep -q 'jasperreports\.sourceforge\.net' references/official-report-sources.md 
 grep -q 'scripts/compile-jrxml\.ps1' SKILL.md || fail 'compiler script is not linked'
 grep -q '\.agents/skills' README.md || fail 'cross-agent installation path is missing'
 grep -q 'plugin marketplace add vitorhugo-dotnet/jasper-jrxml-claude-skill' README.md || fail 'Claude marketplace installation is missing'
-grep -q 'jasper-jrxml-legacy@jasper-jrxml-plugins' README.md || fail 'Claude plugin installation is missing'
+grep -q 'legacy-jrxml-toolkit@jasper-jrxml-plugins' README.md || fail 'Claude plugin installation is missing'
 grep -q 'MIT License' LICENSE || fail 'MIT license is missing'
 grep -q '^\*\.jasper$' .gitignore || fail 'generated Jasper binaries are not ignored'
 grep -q 'does not collect, transmit, or store' PRIVACY.md || fail 'privacy statement is incomplete'
@@ -75,8 +75,8 @@ if not version_match:
 skill_version = version_match.group(1).strip()
 
 expected_plugin = {
-    'name': 'jasper-jrxml-legacy',
-    'displayName': 'Jasper JRXML Legacy',
+    'name': 'legacy-jrxml-toolkit',
+    'displayName': 'Legacy JRXML Toolkit',
     'version': skill_version,
     'license': 'MIT',
     'skills': ['./'],
@@ -101,6 +101,8 @@ if not isinstance(plugins, list) or len(plugins) != 1:
 entry = plugins[0]
 if entry.get('name') != plugin['name']:
     raise SystemExit('validation failed: marketplace and plugin names differ')
+if entry.get('displayName') != plugin['displayName']:
+    raise SystemExit('validation failed: marketplace and plugin display names differ')
 if entry.get('source') != './':
     raise SystemExit('validation failed: marketplace source must preserve the repository root')
 if entry.get('strict') is not True:
