@@ -7,10 +7,10 @@ trap 'rm -rf "$output_dir"' EXIT
 
 "$repo_dir/scripts/package-skill.sh" "$output_dir"
 
-skill_archive="$output_dir/legacy-jrxml-toolkit-chatgpt-codex-skill.zip"
-plugin_archive="$output_dir/legacy-jrxml-toolkit-codex-plugin.zip"
+agent_archive="$output_dir/legacy-jrxml-toolkit-agent-skill.zip"
+submission_archive="$output_dir/legacy-jrxml-toolkit-chatgpt-codex-plugin.zip"
 
-for archive in "$skill_archive" "$plugin_archive"; do
+for archive in "$agent_archive" "$submission_archive"; do
   [[ -f "$archive" ]] || {
     echo "package test failed: archive was not created: $archive" >&2
     exit 1
@@ -27,7 +27,7 @@ for archive in "$skill_archive" "$plugin_archive"; do
   )
 done
 
-python3 - "$skill_archive" "$plugin_archive" <<'PY'
+python3 - "$agent_archive" "$submission_archive" <<'PY'
 import json
 import re
 import sys
@@ -35,8 +35,8 @@ import zipfile
 from pathlib import PurePosixPath
 from urllib.parse import urlparse
 
-skill_archive_path, plugin_archive_path = sys.argv[1:]
-portable_required = {
+agent_archive_path, submission_archive_path = sys.argv[1:]
+agent_required = {
     'SKILL.md',
     'LICENSE',
     'README.md',
@@ -48,7 +48,7 @@ portable_required = {
     'references/official-report-sources.md',
     'docs/report/README.md',
 }
-plugin_required = {
+submission_required = {
     '.codex-plugin/plugin.json',
     'LICENSE',
     'README.md',
@@ -108,38 +108,45 @@ def validate_privacy(archive: zipfile.ZipFile, names: set[str]) -> None:
                 )
 
 
-with zipfile.ZipFile(skill_archive_path) as portable:
-    portable_names = set(portable.namelist())
-    missing = sorted(portable_required - portable_names)
+with zipfile.ZipFile(agent_archive_path) as agent:
+    agent_names = set(agent.namelist())
+    missing = sorted(agent_required - agent_names)
     if missing:
-        raise SystemExit(f'package test failed: portable archive missing: {missing}')
-    validate_paths(portable_names)
-    portable_skill = portable.read('SKILL.md').decode('utf-8')
-    validate_links(portable_skill, portable_names)
-    validate_privacy(portable, portable_names)
+        raise SystemExit(f'package test failed: Agent Skill archive missing: {missing}')
+    validate_paths(agent_names)
+    canonical_skill = agent.read('SKILL.md').decode('utf-8')
+    validate_links(canonical_skill, agent_names)
+    validate_privacy(agent, agent_names)
 
 version_match = re.search(
     r'^\s*version:\s*["\']?([^"\'\n]+)',
-    portable_skill,
+    canonical_skill,
     re.MULTILINE,
 )
 if not version_match:
     raise SystemExit('package test failed: SKILL.md version metadata is missing')
 skill_version = version_match.group(1).strip()
 
-with zipfile.ZipFile(plugin_archive_path) as plugin:
-    plugin_names = set(plugin.namelist())
-    missing = sorted(plugin_required - plugin_names)
-    if missing:
-        raise SystemExit(f'package test failed: Codex plugin archive missing: {missing}')
-    validate_paths(plugin_names)
-    plugin_skill = plugin.read('skills/jasper-jrxml/SKILL.md').decode('utf-8')
-    if plugin_skill != portable_skill:
-        raise SystemExit('package test failed: Codex skill differs from canonical SKILL.md')
-    validate_links(plugin_skill, plugin_names, 'skills/jasper-jrxml')
-    validate_privacy(plugin, plugin_names)
+with zipfile.ZipFile(submission_archive_path) as submission:
+    submission_names = set(submission.namelist())
+    if '.codex-plugin/plugin.json' not in submission_names:
+        raise SystemExit(
+            'package test failed: ChatGPT/Codex bundle must contain '
+            '.codex-plugin/plugin.json at the ZIP root'
+        )
 
-    manifest = json.loads(plugin.read('.codex-plugin/plugin.json'))
+    missing = sorted(submission_required - submission_names)
+    if missing:
+        raise SystemExit(f'package test failed: ChatGPT/Codex bundle missing: {missing}')
+    validate_paths(submission_names)
+
+    submission_skill = submission.read('skills/jasper-jrxml/SKILL.md').decode('utf-8')
+    if submission_skill != canonical_skill:
+        raise SystemExit('package test failed: submitted skill differs from canonical SKILL.md')
+    validate_links(submission_skill, submission_names, 'skills/jasper-jrxml')
+    validate_privacy(submission, submission_names)
+
+    manifest = json.loads(submission.read('.codex-plugin/plugin.json'))
     if manifest.get('name') != 'legacy-jrxml-toolkit':
         raise SystemExit('package test failed: invalid Codex plugin name')
     if manifest.get('skills') != './skills/':
@@ -170,5 +177,5 @@ with zipfile.ZipFile(plugin_archive_path) as plugin:
         if parsed is None or parsed.scheme != 'https' or not parsed.netloc:
             raise SystemExit(f'package test failed: {field} must be an absolute HTTPS URL')
 
-print('ChatGPT/Codex skill and Codex plugin package validation passed')
+print('Agent Skill and ChatGPT/Codex plugin bundle validation passed')
 PY
