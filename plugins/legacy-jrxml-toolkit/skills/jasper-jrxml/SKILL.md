@@ -3,7 +3,7 @@ name: jasper-jrxml
 description: Use when creating, editing, inspecting, compiling, or validating complex legacy iReport/JasperReports JRXML reports, especially JasperReports 2.x/2.0.4, old DTD-based templates, dense official forms, absolute-position layouts, subreports, or .jrxml to .jasper compilation.
 license: MIT
 metadata:
-  version: "1.0.2"
+  version: "1.0.3"
   scope: legacy-ireport-jasperreports
 ---
 

@@ -156,8 +156,8 @@ validate_codex() {
 
   grep -q 'codex plugin marketplace add vitorhugo-dotnet/jasper-jrxml-claude-skill' README.md || fail 'Codex marketplace installation is missing'
   grep -q 'codex plugin add legacy-jrxml-toolkit@jasper-jrxml-plugins' README.md || fail 'Codex plugin installation is missing'
-  grep -q 'legacy-jrxml-toolkit-chatgpt-codex-skill\.zip' README.md || fail 'ChatGPT/Codex skill release artifact is undocumented'
-  grep -q 'legacy-jrxml-toolkit-codex-plugin\.zip' README.md || fail 'Codex plugin release artifact is undocumented'
+  grep -q 'legacy-jrxml-toolkit-agent-skill\.zip' README.md || fail 'portable Agent Skill release artifact is undocumented'
+  grep -q 'legacy-jrxml-toolkit-chatgpt-codex-plugin\.zip' README.md || fail 'ChatGPT/Codex plugin release artifact is undocumented'
 
   bash -n scripts/package-skill.sh
   bash -n tests/package-skill.Tests.sh

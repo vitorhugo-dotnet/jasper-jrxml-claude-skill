@@ -54,9 +54,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip \
-            dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip.sha256 \
-            dist/legacy-jrxml-toolkit-codex-plugin.zip \
-            dist/legacy-jrxml-toolkit-codex-plugin.zip.sha256 \
+            dist/legacy-jrxml-toolkit-agent-skill.zip \
+            dist/legacy-jrxml-toolkit-agent-skill.zip.sha256 \
+            dist/legacy-jrxml-toolkit-chatgpt-codex-plugin.zip \
+            dist/legacy-jrxml-toolkit-chatgpt-codex-plugin.zip.sha256 \
             --generate-notes \
             --title "$GITHUB_REF_NAME"

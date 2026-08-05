@@ -109,7 +109,7 @@ Do not keep multiple editable copies. Prefer the root skill plus generated packa
 
 ## Build distribution artifacts
 
-Generate the portable ChatGPT/Codex skill bundle and the complete Codex marketplace plugin ZIP:
+Generate the portable Agent Skill and the manifest-bearing ChatGPT/Codex plugin bundle:
 
 ```bash
 bash scripts/package-skill.sh
@@ -118,15 +118,17 @@ bash scripts/package-skill.sh
 Artifacts:
 
 ```text
-dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip
-dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip.sha256
-dist/legacy-jrxml-toolkit-codex-plugin.zip
-dist/legacy-jrxml-toolkit-codex-plugin.zip.sha256
+dist/legacy-jrxml-toolkit-agent-skill.zip
+dist/legacy-jrxml-toolkit-agent-skill.zip.sha256
+dist/legacy-jrxml-toolkit-chatgpt-codex-plugin.zip
+dist/legacy-jrxml-toolkit-chatgpt-codex-plugin.zip.sha256
 ```
 
-Use `legacy-jrxml-toolkit-chatgpt-codex-skill.zip` when a ChatGPT or Codex submission form asks for the portable skill bundle. The complete Codex plugin ZIP additionally contains `.codex-plugin/plugin.json` and the `skills/` plugin directory.
+Use `legacy-jrxml-toolkit-chatgpt-codex-plugin.zip` in the OpenAI plugin submission portal. It contains `.codex-plugin/plugin.json` at the ZIP root and the skill under `skills/jasper-jrxml/`, which is the structure the portal validates.
 
-After a successful push to `main`, the GitHub Actions `release-codex` job publishes or refreshes the versioned `chatgpt-codex-v<version>` release with the portable bundle and checksum. Claude validation and Codex release publication remain separate jobs after the common compiler-script validation.
+Use `legacy-jrxml-toolkit-agent-skill.zip` only for clients that accept a portable Agent Skill beginning with `SKILL.md`; it is not the OpenAI plugin submission bundle.
+
+After a successful push to `main`, the GitHub Actions `release-codex` job publishes or refreshes the versioned `chatgpt-codex-v<version>` release with the manifest-bearing ChatGPT/Codex plugin bundle and checksum. Claude validation and Codex release publication remain separate jobs after the common compiler-script validation.
 
 The repository marketplace is the preferred Codex installation path. The ZIPs support marketplace submission, release distribution, offline inspection, and environments that expose manual skill/plugin upload.
 

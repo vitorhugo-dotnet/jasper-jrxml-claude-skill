@@ -1,6 +1,6 @@
 {
   "name": "legacy-jrxml-toolkit",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Build, compile, and validate complex legacy iReport and JasperReports 2.x JRXML reports.",
   "author": {
     "name": "Vitor Hugo Alves Ferreira",
