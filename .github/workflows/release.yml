@@ -24,11 +24,21 @@ jobs:
           set -Eeuo pipefail
           version="${GITHUB_REF_NAME#v}"
           grep -q "^[[:space:]]*version: \"${version}\"$" SKILL.md
+          python3 - "$version" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          expected = sys.argv[1]
+          manifest = json.loads(Path('packaging/codex/plugin.json').read_text(encoding='utf-8'))
+          if manifest.get('version') != expected:
+              raise SystemExit('Codex plugin version does not match the Git tag')
+          PY
 
       - name: Validate repository
         run: bash tests/validate-skill.sh
 
-      - name: Validate Codex/OpenAI skill package
+      - name: Validate distribution packages
         run: bash tests/package-skill.Tests.sh
 
       - name: Build release assets
@@ -41,5 +51,7 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             dist/jasper-jrxml-skill.zip \
             dist/jasper-jrxml-skill.zip.sha256 \
+            dist/legacy-jrxml-toolkit-codex-plugin.zip \
+            dist/legacy-jrxml-toolkit-codex-plugin.zip.sha256 \
             --generate-notes \
             --title "$GITHUB_REF_NAME"
