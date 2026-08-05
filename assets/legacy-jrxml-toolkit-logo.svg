@@ -1,8 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Legacy JRXML Toolkit logo</title>
-  <desc id="desc">Orange square logo with a dark rounded panel, a stylized J, and the JRXML label.</desc>
-  <rect width="512" height="512" rx="96" fill="#F97316"/>
-  <rect x="40" y="40" width="432" height="432" rx="88" fill="#171717"/>
-  <text x="95" y="326" fill="#F97316" font-family="Arial, Helvetica, sans-serif" font-size="280" font-weight="700">J</text>
-  <text x="92" y="414" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="68" font-weight="700">&lt;JRXML/&gt;</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Jasper J">
+  <title>Jasper JRXML Legacy Skill</title>
+  <path fill="#ff5a1f" d="M14 11 49 9l2 40-35 3z"/>
+  <path fill="#fff" d="M26 21h15v5h-4v12c0 6.8-3.8 10.5-10.1 10.5-4 0-7.1-1.9-8.7-5.4l5.1-2.3c.8 1.8 1.9 2.7 3.6 2.7 2.5 0 3.8-1.8 3.8-5.5V26H26z"/>
 </svg>
