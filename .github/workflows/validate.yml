@@ -94,14 +94,14 @@ jobs:
         run: |
           set -Eeuo pipefail
           version="$(python3 - <<'PY'
-          import re
+          import json
           from pathlib import Path
 
-          skill = Path('SKILL.md').read_text(encoding='utf-8')
-          match = re.search(r'^\s*version:\s*["\']?([^"\'\n]+)', skill, re.MULTILINE)
-          if not match:
-              raise SystemExit('SKILL.md version metadata is missing')
-          print(match.group(1).strip())
+          manifest = json.loads(Path('packaging/codex/plugin.json').read_text(encoding='utf-8'))
+          version = manifest.get('version')
+          if not version:
+              raise SystemExit('packaging/codex/plugin.json version is missing')
+          print(version)
           PY
           )"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -129,5 +129,5 @@ jobs:
             gh release create "$RELEASE_TAG" "${assets[@]}" \
               --target "$GITHUB_SHA" \
               --title "Legacy JRXML Toolkit for ChatGPT/Codex v$RELEASE_VERSION" \
-              --notes "Validated ChatGPT/Codex plugin bundle with .codex-plugin/plugin.json, square icons, and agents/openai.yaml."
+              --notes "Validated ChatGPT/Codex plugin bundle with metadata-free SKILL.md, .codex-plugin/plugin.json, square icons, and agents/openai.yaml."
           fi

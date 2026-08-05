@@ -15,16 +15,11 @@ for archive in "$agent_archive" "$submission_archive"; do
     echo "package test failed: archive was not created: $archive" >&2
     exit 1
   }
-
   [[ -f "$archive.sha256" ]] || {
     echo "package test failed: checksum was not created: $archive.sha256" >&2
     exit 1
   }
-
-  (
-    cd "$output_dir"
-    sha256sum --check "$(basename "$archive.sha256")"
-  )
+  (cd "$output_dir" && sha256sum --check "$(basename "$archive.sha256")")
 done
 
 python3 - "$agent_archive" "$submission_archive" <<'PY'
@@ -37,11 +32,10 @@ from urllib.parse import urlparse
 
 agent_archive_path, submission_archive_path = sys.argv[1:]
 agent_required = {
-    'SKILL.md',
-    'LICENSE',
-    'README.md',
-    'PRIVACY.md',
-    'CHANGELOG.md',
+    'SKILL.md', 'LICENSE', 'README.md', 'PRIVACY.md', 'CHANGELOG.md',
+    'agents/openai.yaml',
+    'assets/legacy-jrxml-toolkit-composer.svg',
+    'assets/legacy-jrxml-toolkit-logo.svg',
     'scripts/compile-jrxml.ps1',
     'references/legacy-jrxml-layout.md',
     'references/project-integration.md',
@@ -49,12 +43,11 @@ agent_required = {
     'docs/report/README.md',
 }
 submission_required = {
-    '.codex-plugin/plugin.json',
-    'LICENSE',
-    'README.md',
-    'PRIVACY.md',
-    'CHANGELOG.md',
+    '.codex-plugin/plugin.json', 'LICENSE', 'README.md', 'PRIVACY.md', 'CHANGELOG.md',
     'skills/jasper-jrxml/SKILL.md',
+    'skills/jasper-jrxml/agents/openai.yaml',
+    'skills/jasper-jrxml/assets/legacy-jrxml-toolkit-composer.svg',
+    'skills/jasper-jrxml/assets/legacy-jrxml-toolkit-logo.svg',
     'skills/jasper-jrxml/scripts/compile-jrxml.ps1',
     'skills/jasper-jrxml/references/legacy-jrxml-layout.md',
     'skills/jasper-jrxml/references/project-integration.md',
@@ -62,14 +55,7 @@ submission_required = {
     'skills/jasper-jrxml/docs/report/README.md',
 }
 forbidden_prefixes = ('.git/', '.github/', 'tests/', 'dist/')
-forbidden_terms = (
-    'Apollo',
-    'JC Sistemas',
-    'jcUtil',
-    'SinanFaces',
-    'ApolloAlpha',
-    r'C:\\web\\Apollo',
-)
+forbidden_terms = ('Apollo', 'JC Sistemas', 'jcUtil', 'SinanFaces', 'ApolloAlpha', r'C:\\web\\Apollo')
 
 
 def validate_paths(names: set[str]) -> None:
@@ -88,9 +74,7 @@ def validate_links(skill: str, names: set[str], prefix: str = '') -> None:
     for target in local_links:
         normalized = str(PurePosixPath(prefix) / PurePosixPath(target))
         if normalized not in names:
-            raise SystemExit(
-                f'package test failed: SKILL.md link target is missing: {target}'
-            )
+            raise SystemExit(f'package test failed: SKILL.md link target is missing: {target}')
 
 
 def validate_privacy(archive: zipfile.ZipFile, names: set[str]) -> None:
@@ -103,9 +87,14 @@ def validate_privacy(archive: zipfile.ZipFile, names: set[str]) -> None:
             continue
         for term in forbidden_terms:
             if term in text:
-                raise SystemExit(
-                    f'package test failed: proprietary reference {term!r} found in {name}'
-                )
+                raise SystemExit(f'package test failed: proprietary reference {term!r} found in {name}')
+
+
+def validate_skill_frontmatter(skill: str, source: str) -> None:
+    if re.search(r'^metadata:\s*$', skill, re.MULTILINE):
+        raise SystemExit(f'package test failed: {source} must not contain metadata; use agents/openai.yaml')
+    if not re.search(r'^name:\s*jasper-jrxml\s*$', skill, re.MULTILINE):
+        raise SystemExit(f'package test failed: {source} has an invalid skill name')
 
 
 with zipfile.ZipFile(agent_archive_path) as agent:
@@ -115,26 +104,14 @@ with zipfile.ZipFile(agent_archive_path) as agent:
         raise SystemExit(f'package test failed: Agent Skill archive missing: {missing}')
     validate_paths(agent_names)
     canonical_skill = agent.read('SKILL.md').decode('utf-8')
+    validate_skill_frontmatter(canonical_skill, 'Agent Skill SKILL.md')
     validate_links(canonical_skill, agent_names)
     validate_privacy(agent, agent_names)
-
-version_match = re.search(
-    r'^\s*version:\s*["\']?([^"\'\n]+)',
-    canonical_skill,
-    re.MULTILINE,
-)
-if not version_match:
-    raise SystemExit('package test failed: SKILL.md version metadata is missing')
-skill_version = version_match.group(1).strip()
 
 with zipfile.ZipFile(submission_archive_path) as submission:
     submission_names = set(submission.namelist())
     if '.codex-plugin/plugin.json' not in submission_names:
-        raise SystemExit(
-            'package test failed: ChatGPT/Codex bundle must contain '
-            '.codex-plugin/plugin.json at the ZIP root'
-        )
-
+        raise SystemExit('package test failed: ChatGPT/Codex bundle must contain .codex-plugin/plugin.json at the ZIP root')
     missing = sorted(submission_required - submission_names)
     if missing:
         raise SystemExit(f'package test failed: ChatGPT/Codex bundle missing: {missing}')
@@ -143,6 +120,7 @@ with zipfile.ZipFile(submission_archive_path) as submission:
     submission_skill = submission.read('skills/jasper-jrxml/SKILL.md').decode('utf-8')
     if submission_skill != canonical_skill:
         raise SystemExit('package test failed: submitted skill differs from canonical SKILL.md')
+    validate_skill_frontmatter(submission_skill, 'submitted SKILL.md')
     validate_links(submission_skill, submission_names, 'skills/jasper-jrxml')
     validate_privacy(submission, submission_names)
 
@@ -151,18 +129,14 @@ with zipfile.ZipFile(submission_archive_path) as submission:
         raise SystemExit('package test failed: invalid Codex plugin name')
     if manifest.get('skills') != './skills/':
         raise SystemExit('package test failed: Codex plugin skills path must be ./skills/')
-    if manifest.get('version') != skill_version:
-        raise SystemExit('package test failed: Codex plugin version must match SKILL.md')
+    version = manifest.get('version')
+    if not isinstance(version, str) or not re.fullmatch(r'\d+\.\d+\.\d+', version):
+        raise SystemExit('package test failed: plugin version must use MAJOR.MINOR.PATCH')
 
     interface = manifest.get('interface')
     required_interface = {
-        'displayName',
-        'shortDescription',
-        'longDescription',
-        'developerName',
-        'category',
-        'capabilities',
-        'defaultPrompt',
+        'displayName', 'shortDescription', 'longDescription', 'developerName',
+        'category', 'capabilities', 'defaultPrompt', 'composerIcon', 'logo',
     }
     if not isinstance(interface, dict) or not required_interface <= interface.keys():
         raise SystemExit('package test failed: incomplete Codex plugin interface metadata')

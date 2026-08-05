@@ -55,6 +55,11 @@ def assert_square_svg(data: bytes, source: str) -> None:
         fail(f"{source} must declare square dimensions")
 
 
+def assert_metadata_free_skill(text: str, source: str) -> None:
+    if re.search(r"^metadata:\s*$", text, re.MULTILINE):
+        fail(f"{source} must not contain metadata; put interface settings in agents/openai.yaml")
+
+
 def unquote(value: str) -> str:
     value = value.strip()
     if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
@@ -68,11 +73,7 @@ def parse_openai_interface(text: str, source: str) -> dict[str, str]:
 
     values: dict[str, str] = {}
     for key in REQUIRED_YAML_FIELDS:
-        match = re.search(
-            rf"^  {re.escape(key)}:\s*(.+?)\s*$",
-            text,
-            re.MULTILINE,
-        )
+        match = re.search(rf"^  {re.escape(key)}:\s*(.+?)\s*$", text, re.MULTILINE)
         if match is None:
             fail(f"{source} is missing interface.{key}")
         values[key] = unquote(match.group(1))
@@ -84,9 +85,10 @@ def zip_join(base: str, reference: str) -> str:
 
 
 def validate_source() -> None:
-    manifest = json.loads(
-        (ROOT / "packaging/codex/plugin.json").read_text(encoding="utf-8")
-    )
+    skill_path = ROOT / "SKILL.md"
+    assert_metadata_free_skill(skill_path.read_text(encoding="utf-8"), "SKILL.md")
+
+    manifest = json.loads((ROOT / "packaging/codex/plugin.json").read_text(encoding="utf-8"))
     interface = manifest.get("interface")
     if not isinstance(interface, dict):
         fail("plugin manifest interface is missing")
@@ -103,9 +105,7 @@ def validate_source() -> None:
     openai_path = ROOT / "agents/openai.yaml"
     if not openai_path.is_file():
         fail("agents/openai.yaml is missing")
-    skill_interface = parse_openai_interface(
-        openai_path.read_text(encoding="utf-8"), "agents/openai.yaml"
-    )
+    skill_interface = parse_openai_interface(openai_path.read_text(encoding="utf-8"), "agents/openai.yaml")
     if skill_interface["brand_color"].upper() != "#F97316":
         fail("agents/openai.yaml interface.brand_color must be #F97316")
     if "$jasper-jrxml" not in skill_interface["default_prompt"]:
@@ -120,11 +120,7 @@ def validate_source() -> None:
 
 def validate_release_zip() -> None:
     with tempfile.TemporaryDirectory() as output:
-        subprocess.run(
-            ["bash", "scripts/package-skill.sh", output],
-            cwd=ROOT,
-            check=True,
-        )
+        subprocess.run(["bash", "scripts/package-skill.sh", output], cwd=ROOT, check=True)
         archive_path = Path(output) / PLUGIN_ARCHIVE
         if not archive_path.is_file():
             fail(f"release archive was not created: {PLUGIN_ARCHIVE}")
@@ -149,12 +145,15 @@ def validate_release_zip() -> None:
                     fail(f"release manifest references missing asset: {reference}")
                 assert_square_svg(archive.read(asset_name), asset_name)
 
+            skill_name = "skills/jasper-jrxml/SKILL.md"
+            if skill_name not in names:
+                fail("release ZIP is missing skills/jasper-jrxml/SKILL.md")
+            assert_metadata_free_skill(archive.read(skill_name).decode("utf-8"), skill_name)
+
             openai_name = "skills/jasper-jrxml/agents/openai.yaml"
             if openai_name not in names:
                 fail("release ZIP is missing skills/jasper-jrxml/agents/openai.yaml")
-            skill_interface = parse_openai_interface(
-                archive.read(openai_name).decode("utf-8"), openai_name
-            )
+            skill_interface = parse_openai_interface(archive.read(openai_name).decode("utf-8"), openai_name)
             for field in ("icon_small", "icon_large"):
                 asset_name = zip_join("skills/jasper-jrxml", skill_interface[field])
                 if asset_name not in names:
