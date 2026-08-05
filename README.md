@@ -1,1 +1,92 @@
-# jasper-jrxml-claude-skill
+# Jasper JRXML Legacy Skill
+
+Portable Agent Skill for complex **legacy iReport/JasperReports 2.x** reports, especially JasperReports 2.0.4, old DTD-based JRXML, dense official forms, absolute layouts, subreports, and headless `.jrxml` → `.jasper` validation.
+
+It preserves legacy syntax instead of “helpfully” upgrading a 2007 report into a 2026 incident report.
+
+## What it provides
+
+- high-fidelity patterns for numbered fields, boxes, dividers, rotated sidebars, and rounded boxes with an open top;
+- an evidence-based workflow for reproducing multi-page official forms;
+- a configurable PowerShell/JDK 8 compiler harness using the consuming project's JasperReports 2.x jars;
+- official SINAN form and JasperReports reference sources;
+- local project learning under `docs/report/`, without leaking proprietary conventions into the shared skill.
+
+## Install
+
+The repository itself is a skill folder: `SKILL.md` is at its root.
+
+### Cross-agent path
+
+Clone into the open Agent Skills directory:
+
+```bash
+git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git \
+  ~/.agents/skills/jasper-jrxml
+```
+
+Clients that support the [Agent Skills specification](https://agentskills.io/specification) can discover it there or through their configured skill catalog.
+
+### Claude Code
+
+Install as a personal skill:
+
+```bash
+git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git \
+  ~/.claude/skills/jasper-jrxml
+```
+
+For project-scoped use, clone or add it as a submodule under `.claude/skills/jasper-jrxml`.
+
+### Codex
+
+Use the cross-agent `~/.agents/skills/jasper-jrxml` location when supported by your Codex environment, or register/clone the folder in the Codex skills directory configured by that environment.
+
+Do not keep multiple editable copies. Prefer one clone plus symlinks when the operating system and client support them.
+
+## Usage
+
+Ask the agent to create, edit, inspect, compile, or validate a legacy JRXML report, or invoke `jasper-jrxml` explicitly when the client supports direct skill invocation.
+
+Compile a report with the bundled harness:
+
+```powershell
+pwsh -NoProfile -File scripts/compile-jrxml.ps1 `
+  -Jrxml "reports/complex-form.jrxml" `
+  -ProjectRoot "C:\path\to\consumer-project" `
+  -LibDirectory "target\app\WEB-INF\lib" `
+  -DeployDirectory "src\main\webapp\WEB-INF\reports"
+```
+
+Requirements:
+
+- JDK 8;
+- the consuming project's JasperReports 2.x and transitive jars;
+- PowerShell;
+- a real application fill/PDF comparison for visual validation.
+
+## Compatibility boundary
+
+This skill intentionally targets old iReport/JasperReports. Current [JasperReports samples](https://jasperreports.sourceforge.net/sample.reference/README.html) are conceptual references only. Never introduce modern syntax into a JasperReports 2.x template without compiling it against the project's exact legacy dependencies.
+
+Official complex-form sources are listed in [`references/official-report-sources.md`](references/official-report-sources.md), including the [SINAN portal](https://portalsinan.saude.gov.br/).
+
+## Project-specific learning
+
+When a correction is confirmed, the agent writes a focused Markdown lesson in the **consuming repository's** `docs/report/`. The distributed skill is not silently modified and private project details are not promoted upstream. See [`docs/report/README.md`](docs/report/README.md).
+
+## Validate this repository
+
+```bash
+bash tests/validate-skill.sh
+```
+
+If PowerShell is installed:
+
+```powershell
+pwsh -NoProfile -File tests/compile-jrxml.Tests.ps1
+```
+
+## License
+
+[MIT](LICENSE)
