@@ -13,7 +13,23 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Test Claude version validator
+        run: node --test tests/validate-claude-version.test.mjs
+
+      - name: Validate Claude plugin version increment
+        env:
+          CLAUDE_VERSION_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/validate-claude-version.mjs
 
       - name: Validate skill and Claude plugin metadata
         run: bash tests/validate-skill.sh
