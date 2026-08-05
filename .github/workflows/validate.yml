@@ -1,0 +1,23 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate skill and Claude plugin metadata
+        run: bash tests/validate-skill.sh
+
+      - name: Run PowerShell compiler contract tests
+        shell: pwsh
+        run: ./tests/compile-jrxml.Tests.ps1
