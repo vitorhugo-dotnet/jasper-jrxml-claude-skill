@@ -1,0 +1,32 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "jasper-jrxml-plugins",
+  "description": "Claude Code plugins for legacy iReport and JasperReports workflows.",
+  "owner": {
+    "name": "Vitor Hugo Alves Ferreira"
+  },
+  "plugins": [
+    {
+      "name": "jasper-jrxml-legacy",
+      "displayName": "Jasper JRXML Legacy",
+      "source": "./",
+      "strict": true,
+      "version": "1.0.0",
+      "description": "Create, inspect, compile, and validate complex legacy iReport and JasperReports 2.x JRXML reports without introducing incompatible modern syntax.",
+      "author": {
+        "name": "Vitor Hugo Alves Ferreira"
+      },
+      "homepage": "https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill",
+      "repository": "https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill",
+      "license": "MIT",
+      "category": "development",
+      "tags": [
+        "jasperreports",
+        "ireport",
+        "jrxml",
+        "legacy-java",
+        "reporting"
+      ]
+    }
+  ]
+}
