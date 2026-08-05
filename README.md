@@ -14,7 +14,45 @@ It preserves legacy syntax instead of “helpfully” upgrading a 2007 report in
 
 ## Install
 
-The repository itself is a skill folder: `SKILL.md` is at its root.
+The repository is both a portable Agent Skill and a Claude Code plugin marketplace. `SKILL.md` remains the canonical source at the repository root.
+
+### Claude Code marketplace
+
+Add this GitHub repository as a marketplace:
+
+```text
+/plugin marketplace add vitorhugo-dotnet/jasper-jrxml-claude-skill
+```
+
+Install the plugin:
+
+```text
+/plugin install jasper-jrxml-legacy@jasper-jrxml-plugins
+```
+
+The plugin exposes the skill under the Claude Code namespace:
+
+```text
+/jasper-jrxml-legacy:jasper-jrxml
+```
+
+Equivalent non-interactive CLI commands:
+
+```bash
+claude plugin marketplace add vitorhugo-dotnet/jasper-jrxml-claude-skill
+claude plugin install jasper-jrxml-legacy@jasper-jrxml-plugins
+```
+
+### Claude Code standalone skill
+
+For a direct installation without the marketplace:
+
+```bash
+git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git \
+  ~/.claude/skills/jasper-jrxml
+```
+
+For project-scoped use, clone or add it as a submodule under `.claude/skills/jasper-jrxml`.
 
 ### Cross-agent path
 
@@ -26,17 +64,6 @@ git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git \
 ```
 
 Clients that support the [Agent Skills specification](https://agentskills.io/specification) can discover it there or through their configured skill catalog.
-
-### Claude Code
-
-Install as a personal skill:
-
-```bash
-git clone https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill.git \
-  ~/.claude/skills/jasper-jrxml
-```
-
-For project-scoped use, clone or add it as a submodule under `.claude/skills/jasper-jrxml`.
 
 ### Codex
 
@@ -77,8 +104,23 @@ When a correction is confirmed, the agent writes a focused Markdown lesson in th
 
 ## Validate this repository
 
+Validate the portable skill and Claude plugin metadata:
+
 ```bash
 bash tests/validate-skill.sh
+```
+
+Validate with Claude Code itself:
+
+```bash
+claude plugin validate . --strict
+claude --plugin-dir .
+```
+
+Inside that Claude Code session, invoke:
+
+```text
+/jasper-jrxml-legacy:jasper-jrxml
 ```
 
 If PowerShell is installed:
@@ -86,6 +128,12 @@ If PowerShell is installed:
 ```powershell
 pwsh -NoProfile -File tests/compile-jrxml.Tests.ps1
 ```
+
+## Privacy and releases
+
+- [Privacy statement](PRIVACY.md)
+- [Changelog](CHANGELOG.md)
+- [Support and bug reports](https://github.com/vitorhugo-dotnet/jasper-jrxml-claude-skill/issues)
 
 ## License
 
