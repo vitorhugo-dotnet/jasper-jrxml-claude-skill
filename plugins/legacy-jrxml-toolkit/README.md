@@ -109,7 +109,7 @@ Do not keep multiple editable copies. Prefer the root skill plus generated packa
 
 ## Build distribution artifacts
 
-Generate the portable Agent Skill ZIP and the official Codex plugin ZIP:
+Generate the portable ChatGPT/Codex skill bundle and the complete Codex marketplace plugin ZIP:
 
 ```bash
 bash scripts/package-skill.sh
@@ -118,13 +118,17 @@ bash scripts/package-skill.sh
 Artifacts:
 
 ```text
-dist/jasper-jrxml-skill.zip
-dist/jasper-jrxml-skill.zip.sha256
+dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip
+dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip.sha256
 dist/legacy-jrxml-toolkit-codex-plugin.zip
 dist/legacy-jrxml-toolkit-codex-plugin.zip.sha256
 ```
 
-The repository marketplace is the preferred Codex installation path. The ZIPs support release distribution, offline inspection, and environments that expose manual skill/plugin upload.
+Use `legacy-jrxml-toolkit-chatgpt-codex-skill.zip` when a ChatGPT or Codex submission form asks for the portable skill bundle. The complete Codex plugin ZIP additionally contains `.codex-plugin/plugin.json` and the `skills/` plugin directory.
+
+After a successful push to `main`, the GitHub Actions `release-codex` job publishes or refreshes the versioned `chatgpt-codex-v<version>` release with the portable bundle and checksum. Claude validation and Codex release publication remain separate jobs after the common compiler-script validation.
+
+The repository marketplace is the preferred Codex installation path. The ZIPs support marketplace submission, release distribution, offline inspection, and environments that expose manual skill/plugin upload.
 
 After changing canonical skill files or public metadata, regenerate the committed Codex plugin tree:
 
@@ -167,11 +171,20 @@ When a correction is confirmed, the agent writes a focused Markdown lesson in th
 
 ## Validate this repository
 
-Run all portable skill, Claude plugin, Codex plugin, and package checks:
+Run all checks locally:
 
 ```bash
-bash tests/validate-skill.sh
+bash tests/validate-skill.sh all
+bash tests/workflow-structure.Tests.sh
 bash tests/package-skill.Tests.sh
+```
+
+Run one validation boundary independently:
+
+```bash
+bash tests/validate-skill.sh compiler
+bash tests/validate-skill.sh claude
+bash tests/validate-skill.sh codex
 ```
 
 Validate with Claude Code itself:
