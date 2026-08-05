@@ -113,8 +113,8 @@ jobs:
         run: |
           set -Eeuo pipefail
           assets=(
-            dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip
-            dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip.sha256
+            dist/legacy-jrxml-toolkit-chatgpt-codex-plugin.zip
+            dist/legacy-jrxml-toolkit-chatgpt-codex-plugin.zip.sha256
           )
 
           git tag --force "$RELEASE_TAG" "$GITHUB_SHA"
@@ -126,5 +126,5 @@ jobs:
             gh release create "$RELEASE_TAG" "${assets[@]}" \
               --target "$GITHUB_SHA" \
               --title "Legacy JRXML Toolkit for ChatGPT/Codex v$RELEASE_VERSION" \
-              --notes "Validated ChatGPT/Codex skill bundle generated from the canonical SKILL.md."
+              --notes "Validated ChatGPT/Codex plugin bundle with .codex-plugin/plugin.json at the ZIP root."
           fi
