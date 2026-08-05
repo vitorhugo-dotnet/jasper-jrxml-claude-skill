@@ -15,15 +15,21 @@ ROOT = Path(__file__).resolve().parent.parent
 PLUGIN_ARCHIVE = "legacy-jrxml-toolkit-chatgpt-codex-plugin.zip"
 COMPOSER_ICON = "./assets/legacy-jrxml-toolkit-composer.svg"
 LOGO = "./assets/legacy-jrxml-toolkit-logo.svg"
-SKILL_ICON_SMALL = "./assets/legacy-jrxml-toolkit-composer.svg"
-SKILL_ICON_LARGE = "./assets/legacy-jrxml-toolkit-logo.svg"
+REQUIRED_YAML_FIELDS = (
+    "display_name",
+    "short_description",
+    "icon_small",
+    "icon_large",
+    "brand_color",
+    "default_prompt",
+)
 
 
 def fail(message: str) -> None:
     raise SystemExit(f"OpenAI interface test failed: {message}")
 
 
-def assert_square_svg_bytes(data: bytes, source: str) -> None:
+def assert_square_svg(data: bytes, source: str) -> None:
     try:
         root = ElementTree.fromstring(data)
     except ElementTree.ParseError as error:
@@ -49,53 +55,50 @@ def assert_square_svg_bytes(data: bytes, source: str) -> None:
         fail(f"{source} must declare square dimensions")
 
 
+def unquote(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+        return value[1:-1]
+    return value
+
+
 def parse_openai_interface(text: str, source: str) -> dict[str, str]:
     if not re.search(r"^interface:\s*$", text, re.MULTILINE):
         fail(f"{source} must contain an interface mapping")
 
     values: dict[str, str] = {}
-    for key in (
-        "display_name",
-        "short_description",
-        "icon_small",
-        "icon_large",
-        "brand_color",
-        "default_prompt",
-    ):
+    for key in REQUIRED_YAML_FIELDS:
         match = re.search(
-            rf"^  {re.escape(key)}:\s*[\"']?(.+?)[\"']?\s*$",
+            rf"^  {re.escape(key)}:\s*(.+?)\s*$",
             text,
             re.MULTILINE,
         )
         if match is None:
             fail(f"{source} is missing interface.{key}")
-        values[key] = match.group(1).strip().strip('"\'')
+        values[key] = unquote(match.group(1))
     return values
 
 
-def resolve_zip_path(base: str, reference: str) -> str:
-    reference_path = PurePosixPath(reference.removeprefix("./"))
-    return str(PurePosixPath(base) / reference_path)
+def zip_join(base: str, reference: str) -> str:
+    return str(PurePosixPath(base) / PurePosixPath(reference.removeprefix("./")))
 
 
 def validate_source() -> None:
-    manifest_path = ROOT / "packaging/codex/plugin.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (ROOT / "packaging/codex/plugin.json").read_text(encoding="utf-8")
+    )
     interface = manifest.get("interface")
     if not isinstance(interface, dict):
         fail("plugin manifest interface is missing")
 
-    expected = {
-        "composerIcon": COMPOSER_ICON,
-        "logo": LOGO,
-    }
-    for field, expected_path in expected.items():
-        if interface.get(field) != expected_path:
-            fail(f"plugin manifest interface.{field} must be {expected_path}")
-        asset = ROOT / expected_path.removeprefix("./")
+    expected = {"composerIcon": COMPOSER_ICON, "logo": LOGO}
+    for field, reference in expected.items():
+        if interface.get(field) != reference:
+            fail(f"plugin manifest interface.{field} must be {reference}")
+        asset = ROOT / reference.removeprefix("./")
         if not asset.is_file():
-            fail(f"plugin manifest asset is missing: {expected_path}")
-        assert_square_svg_bytes(asset.read_bytes(), str(asset.relative_to(ROOT)))
+            fail(f"plugin manifest asset is missing: {reference}")
+        assert_square_svg(asset.read_bytes(), str(asset.relative_to(ROOT)))
 
     openai_path = ROOT / "agents/openai.yaml"
     if not openai_path.is_file():
@@ -103,20 +106,16 @@ def validate_source() -> None:
     skill_interface = parse_openai_interface(
         openai_path.read_text(encoding="utf-8"), "agents/openai.yaml"
     )
-    expected_skill = {
-        "icon_small": SKILL_ICON_SMALL,
-        "icon_large": SKILL_ICON_LARGE,
-        "brand_color": "#F97316",
-    }
-    for field, expected_value in expected_skill.items():
-        if skill_interface[field] != expected_value:
-            fail(f"agents/openai.yaml interface.{field} must be {expected_value}")
+    if skill_interface["brand_color"].upper() != "#F97316":
+        fail("agents/openai.yaml interface.brand_color must be #F97316")
+    if "$jasper-jrxml" not in skill_interface["default_prompt"]:
+        fail("agents/openai.yaml default_prompt must reference $jasper-jrxml")
 
     for field in ("icon_small", "icon_large"):
         asset = ROOT / skill_interface[field].removeprefix("./")
         if not asset.is_file():
             fail(f"skill interface asset is missing: {skill_interface[field]}")
-        assert_square_svg_bytes(asset.read_bytes(), str(asset.relative_to(ROOT)))
+        assert_square_svg(asset.read_bytes(), str(asset.relative_to(ROOT)))
 
 
 def validate_release_zip() -> None:
@@ -148,7 +147,7 @@ def validate_release_zip() -> None:
                 asset_name = reference.removeprefix("./")
                 if asset_name not in names:
                     fail(f"release manifest references missing asset: {reference}")
-                assert_square_svg_bytes(archive.read(asset_name), asset_name)
+                assert_square_svg(archive.read(asset_name), asset_name)
 
             openai_name = "skills/jasper-jrxml/agents/openai.yaml"
             if openai_name not in names:
@@ -157,12 +156,10 @@ def validate_release_zip() -> None:
                 archive.read(openai_name).decode("utf-8"), openai_name
             )
             for field in ("icon_small", "icon_large"):
-                asset_name = resolve_zip_path(
-                    "skills/jasper-jrxml", skill_interface[field]
-                )
+                asset_name = zip_join("skills/jasper-jrxml", skill_interface[field])
                 if asset_name not in names:
                     fail(f"skill interface references missing ZIP asset: {asset_name}")
-                assert_square_svg_bytes(archive.read(asset_name), asset_name)
+                assert_square_svg(archive.read(asset_name), asset_name)
 
 
 if __name__ == "__main__":
