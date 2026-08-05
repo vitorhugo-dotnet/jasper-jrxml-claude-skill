@@ -70,6 +70,9 @@ jobs:
       - name: Validate ChatGPT and Codex distribution package
         run: bash tests/package-skill.Tests.sh
 
+      - name: Validate OpenAI plugin and skill interface
+        run: python3 tests/openai-interface.Tests.py
+
   release-codex:
     name: Publish ChatGPT and Codex release
     needs: validate-codex
@@ -126,5 +129,5 @@ jobs:
             gh release create "$RELEASE_TAG" "${assets[@]}" \
               --target "$GITHUB_SHA" \
               --title "Legacy JRXML Toolkit for ChatGPT/Codex v$RELEASE_VERSION" \
-              --notes "Validated ChatGPT/Codex plugin bundle with .codex-plugin/plugin.json at the ZIP root."
+              --notes "Validated ChatGPT/Codex plugin bundle with .codex-plugin/plugin.json, square icons, and agents/openai.yaml."
           fi
