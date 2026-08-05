@@ -117,6 +117,9 @@ jobs:
             dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip.sha256
           )
 
+          git tag --force "$RELEASE_TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$RELEASE_TAG" --force
+
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
           else
