@@ -11,7 +11,7 @@
       "displayName": "Legacy JRXML Toolkit",
       "source": "./",
       "strict": true,
-      "version": "1.0.4",
+      "version": "1.0.5",
       "description": "Create, inspect, compile, and validate complex legacy iReport and JasperReports 2.x JRXML reports without introducing incompatible modern syntax.",
       "author": {
         "name": "Vitor Hugo Alves Ferreira"
