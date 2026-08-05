@@ -81,8 +81,8 @@ if "github.ref == 'refs/heads/main'" not in release_codex:
 for required in (
     'bash scripts/package-skill.sh dist',
     'chatgpt-codex-v',
-    'legacy-jrxml-toolkit-chatgpt-codex-skill.zip',
-    'legacy-jrxml-toolkit-chatgpt-codex-skill.zip.sha256',
+    'legacy-jrxml-toolkit-chatgpt-codex-plugin.zip',
+    'legacy-jrxml-toolkit-chatgpt-codex-plugin.zip.sha256',
     'git tag --force "$RELEASE_TAG" "$GITHUB_SHA"',
     'git push origin "refs/tags/$RELEASE_TAG" --force',
     'gh release',
@@ -90,11 +90,18 @@ for required in (
     if required not in release_codex:
         fail(f'release-codex is missing {required}')
 
-explicit_archive = 'legacy-jrxml-toolkit-chatgpt-codex-skill.zip'
-if explicit_archive not in package_script:
-    fail(f'package script must create {explicit_archive}')
-if 'create_archive "$portable_stage" "jasper-jrxml-skill.zip"' in package_script:
-    fail('legacy ambiguous portable archive name is still generated')
+submission_archive = 'legacy-jrxml-toolkit-chatgpt-codex-plugin.zip'
+agent_archive = 'legacy-jrxml-toolkit-agent-skill.zip'
+if submission_archive not in package_script:
+    fail(f'package script must create {submission_archive}')
+if agent_archive not in package_script:
+    fail(f'package script must create {agent_archive}')
+for obsolete in (
+    'legacy-jrxml-toolkit-chatgpt-codex-skill.zip',
+    'legacy-jrxml-toolkit-codex-plugin.zip',
+):
+    if obsolete in package_script or obsolete in release_codex:
+        fail(f'obsolete or misleading archive name is still used: {obsolete}')
 
 print('workflow structure validation passed')
 PY
