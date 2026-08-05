@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Validate version tag
         shell: bash
@@ -30,13 +30,18 @@ jobs:
           from pathlib import Path
 
           expected = sys.argv[1]
-          manifest = json.loads(Path('packaging/codex/plugin.json').read_text(encoding='utf-8'))
-          if manifest.get('version') != expected:
-              raise SystemExit('Codex plugin version does not match the Git tag')
+          manifests = (
+              Path('.claude-plugin/plugin.json'),
+              Path('packaging/codex/plugin.json'),
+          )
+          for path in manifests:
+              manifest = json.loads(path.read_text(encoding='utf-8'))
+              if manifest.get('version') != expected:
+                  raise SystemExit(f'{path} version does not match the Git tag')
           PY
 
       - name: Validate repository
-        run: bash tests/validate-skill.sh
+        run: bash tests/validate-skill.sh all
 
       - name: Validate distribution packages
         run: bash tests/package-skill.Tests.sh
@@ -49,8 +54,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            dist/jasper-jrxml-skill.zip \
-            dist/jasper-jrxml-skill.zip.sha256 \
+            dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip \
+            dist/legacy-jrxml-toolkit-chatgpt-codex-skill.zip.sha256 \
             dist/legacy-jrxml-toolkit-codex-plugin.zip \
             dist/legacy-jrxml-toolkit-codex-plugin.zip.sha256 \
             --generate-notes \
